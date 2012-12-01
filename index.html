@@ -6,7 +6,10 @@
     <title>
     </title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="">
+    <style type="text/css">
+      html { height: 100% }
+      #map_canvas { height: 100% }
+    </style>
     <meta name="author" content="">
     <!-- Le styles -->
     <link href="assets/css/bootstrap.css" rel="stylesheet">
@@ -29,9 +32,30 @@
     <style>
       undefined
     </style>
+<style type="text/css">
+#map_canvas { height: 300px;
+              width:300px }
+</style>
+<script type="text/javascript"
+src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD-g7B8YM-P9qNRSPLXBw-mecrP-hKIhIM&sensor=false">
+</script>
+<script type="text/javascript">
+function initialize() {
+
+    var mapOptions = {
+center: new google.maps.LatLng(-34.397, 150.644),
+        zoom: 8,
+        mapTypeId: google.maps.MapTypeId.ROADMAP
+    };
+    var map = new google.maps.Map(document.getElementById("map_canvas"),
+            mapOptions);
+
+
+}
+</script>
   </head>
   
-  <body>
+<body onload="initialize()">
     <div class="navbar navbar-fixed-top navbar-inverse">
       <div class="navbar-inner">
         <div class="container-fluid">
@@ -121,7 +145,17 @@
               <p>
                 Content
         <span id="datastream-value"></span>
+        <span id="feed-list"></span>
+    <input type="button" value="newFeed" onclick="javascript:createNewFeed()"/>
+    <input type="button" value="listFeed" onclick="javascript:getFeedList()"/>
+    <input type="button" value="updateFeed" onclick="javascript:updateFeed()"/>
+    <input type="button" value="historialFeed" onclick="javascript:getHistoricalFeed()"/>
+    <input type="button" value="drawFeed" onclick="javascript:drawFeed(histFeed)"/>
+
+
               </p>
+<script type="text/javascript" src="http://tile.cloudmade.com/wml/0.2/web-maps-lite.js"></script><script type="text/javascript" src="http://apps.pachube.com/trails/trails.js"></script><script type="text/javascript">createPachubeTrails(1963,0,1,2,500,500);</script>
+<div id="map_canvas" ></div>
             </div>
           </div>
           <hr>
@@ -131,7 +165,6 @@
         </div>
       </div>
     </div>
-    <input type="button" value="newFeed" onclick="javascript:createNewFeed()"/>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js">
     </script>
     <script src="assets/js/bootstrap.js">
@@ -139,7 +172,7 @@
       <script src="assets/js/cosmjs-1.0.0.min.js">
       </script>
 
-      <script >
+      <script type="text/javascript">
     var json_feed_file = 'feedCreation.json';
     cosm.setKey("bG6AVQou1cNpqkVK1PCuHY1aTISSAKxHdVZBVzVLQlgrMD0g");
     var feedDef;
@@ -147,29 +180,121 @@
         feedDef = data;
     });
     //var json_feed_file = 'feedCreation.json';
-    var feedId = 89355;
     //$('#datastream-value').cosm('get', { feed: feedId , datastream: '0' });  
 //    cosm.feed.get (feedId, function (data) {
 //        feedDef = data;
 //    });
 
-    var aux;
-    
-    function getFeedDef( ) {
-        return $.get(json_feed_file).pipe(function (data) {
-            console.log(data); 
-            aux = data;
-            return data;
-        });
-    }
     function createNewFeed(){
         return cosm.feed.new(feedDef,function (data) {
                 return data;
         });
     }
+    var feedList = new Array();
     
+    function getFeedList(){
+        cosm.feed.list ({"user":"chudichudi"}, function (data) {
+                    //alert(            data );
+                    feedList = [];
+                    for(var i = 0; i < data['totalResults']; i++){
+                    //$.each(data['results'], function (feeds){
+                        feedList.push( data['results'][i]['id']) ;
+                    //});
+                    }
+                    //feedList = data['results'][0]['id'];
+                    $('#datastream-value').text(feedList);
+                    return data;
+            });
+    }
+    var feedId =  '89392';
+    function updateFeed(feedId){
+        var newLoc = {"title":"BreathInSensor","location":{
+          "disposition":"mobile",
+          "ele":"0.0",
+          "lat":1.0,
+          "lon":1.0,
+          "domain":"physical"
+          }}; 
+       cosm.feed.update(feedId,newLoc,function(data){
+        }) ;
+    }
+
+
+    var histFeed;
+    function getHistoricalFeed(){
+        cosm.feed.history (1963, {"duration":"100000seconds"}, function (data) {
+            histFeed = data;
+        });
+
+    }
+    
+    function getRGB(min, max, value, reverse){
+        var red = (int) (255*value-255*min)(max-min);
+        var green = (int) (255*value-255*max)/(min-max);
+        function rgbToHex(r, g, b) {
+            return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+        }
+        return rgbToHex(red, green,0);
+
+    } 
+   
+    function drawFeed(feedH){
+
+      var myLatLng = new google.maps.LatLng(0, -180);
+      var mapOptions = {
+        zoom: 3,
+        center: myLatLng,
+        mapTypeId: google.maps.MapTypeId.TERRAIN
+      };
+
+
+      var minTemp = 5;
+      var maxTemp = 25;
+
+      var minHum = 10;
+      var maxHum = 50;  
+      var map = new google.maps.Map(document.getElementById("map_canvas"),
+          mapOptions);
+            var routeCoors = [];
+            //alert(feedH.location.waypoints[0].lat);
+            var waypointToSort = feedH.location.waypoints;
+            for(var ways in waypointToSort){
+                console.log(waypointToSort[ways].lat);
+                console.log(waypointToSort[ways].lon);
+            }
+            waypointToSort = waypointToSort.sort(function(a, b) {
+                 console.log(a['at']);
+                 console.log(b['at']);
+                 console.log(a['at'] > b['at']);
+                 return (a['at'] > b['at']);
+                
+            });
+            for(var ways in waypointToSort){
+                var lat = waypointToSort[ways].lat;
+                var lon = waypointToSort[ways].lon;
+                console.log(lat);
+                console.log(lon);
+                console.log(ways);
+                if(typeof lon === 'undefined' || typeof lat === 'undefined'){
+                }else{
+                    routeCoors.push( new google.maps.LatLng(lat, lon)) ;
+                }            
+            }
+              var routePoly = new google.maps.Polyline({
+                path: routeCoors,
+                strokeColor: "#FF0000",
+                strokeOpacity: 1.0,
+                strokeWeight: 2
+              });
+
+              routePoly.setMap(map);
+    }
+
+
+
 
       </script>
+
   </body>
 
 </html>
