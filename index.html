@@ -149,8 +149,9 @@ center: new google.maps.LatLng(-34.397, 150.644),
     <input type="button" value="newFeed" onclick="javascript:createNewFeed()"/>
     <input type="button" value="listFeed" onclick="javascript:getFeedList()"/>
     <input type="button" value="updateFeed" onclick="javascript:updateFeed()"/>
-    <input type="button" value="historialFeed" onclick="javascript:getHistoricalFeed()"/>
+    <input type="button" value="historialFeed" onclick="javascript:getHistoricalFeed(1963)"/>
     <input type="button" value="drawFeed" onclick="javascript:drawFeed(histFeed,'2')"/>
+    <input type="button" value="getFeedsForUser" onclick="javascript:getFeedsForUser('ufo sighted location')"/>
 
 
               </p>
@@ -190,22 +191,31 @@ center: new google.maps.LatLng(-34.397, 150.644),
                 return data;
         });
     }
-    var feedList = new Array();
-    
-    function getFeedList(){
-        cosm.feed.list ({"user":"chudichudi"}, function (data) {
+   
+    var cosmUser = "chudichudi" ;
+    var feedListIds = new Array();
+    function getFeedListIds(cosmUser){
+        cosm.feed.list ({"user":cosmUser}, function (data) {
                     //alert(            data );
-                    feedList = [];
+                    feedListIds = [];
                     for(var i = 0; i < data['totalResults']; i++){
                     //$.each(data['results'], function (feeds){
-                        feedList.push( data['results'][i]['id']) ;
+                        feedListIds.push( data['results'][i]['id']) ;
                     //});
                     }
-                    //feedList = data['results'][0]['id'];
-                    $('#datastream-value').text(feedList);
+                    //feedListIds = data['results'][0]['id'];
+                    $('#datastream-value').text(feedListIds);
                     return data;
             });
     }
+    /*
+    function setFeedList(cosmU){
+        cosm.feed.list ({"user":cosmU}, function (data) {
+                    feedList = data;
+            });
+    }
+    */
+    /*
     var feedId =  '89392';
     function updateFeed(feedId){
         var newLoc = {"title":"BreathInSensor","location":{
@@ -219,13 +229,38 @@ center: new google.maps.LatLng(-34.397, 150.644),
         }) ;
     }
 
+    */
+    var feedList;
+    var userId = "ufo sighted location";   
+    var userFeeds = []; 
+    function setFeedsForUser(userId){
+        cosm.feed.list ({"user":cosmUser}, function (data) {
+                    feedList = data.results;
+                for(var f in feedList){
+                    
+                    console.log(feedList[f].location.name);
+                    if(feedList[f].location.name == userId){
+                        userFeeds.push(feedList[f]);
+                    }
+                }
+            });
+    }
+
+ 
 
     var histFeed;
-    function getHistoricalFeed(){
-        cosm.feed.history (1963, {"duration":"100000seconds"}, function (data) {
+    var feedId = 1963; 
+    function getHistoricalFeed(feedId){
+        cosm.feed.history (feedId, {"duration":"100000seconds"}, function (data) {
             histFeed = data;
         });
 
+    }
+
+    function drawFeeds(feeds, datastreamId){
+        for(var f in feeds){
+            drawFeed(feeds[f], datastreamId);
+        }    
     }
     
     function getRGB(min, max, value){
