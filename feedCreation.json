@@ -1,0 +1,35 @@
+{
+  "title":"BreathInSensor",
+  "version":"0.1.0",
+   "id":7654598,
+    "location":{
+        "disposition":"mobile",
+        "name":"usedId",
+        "domain":"physical",
+        "lat":0.0,
+        "lon":0.0,
+        "ele":0.0
+    
+  },
+  "datastreams":[
+    {
+      "id":"co"
+    },
+    {
+      "id":"hum"
+    },
+    {
+      "id":"temp"
+    },
+    {
+      "id":"emag"
+    },
+    {
+      "id":"db"
+    },
+    {
+      "id":"hbeat"
+    },
+  ]
+}
+
