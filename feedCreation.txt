@@ -1,0 +1,19 @@
+{
+  "title":"BreathInSensor",
+  "version":"1.0.0",
+   "id":7654598,
+    "location":{
+    "disposition":"mobile",
+    "name":"usedId",
+    "domain":"physical"
+  },
+  "datastreams":[
+    {
+      "id":"0"
+    },
+    {
+      "id":"1"
+    }
+  ]
+}
+
