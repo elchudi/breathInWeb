@@ -33,8 +33,8 @@
       undefined
     </style>
 <style type="text/css">
-#map_canvas { height: 300px;
-              width:300px }
+#map_canvas { height: 500px;
+              width:700px }
 </style>
 <script type="text/javascript"
 src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD-g7B8YM-P9qNRSPLXBw-mecrP-hKIhIM&sensor=false">
@@ -150,12 +150,12 @@ center: new google.maps.LatLng(-34.397, 150.644),
     <input type="button" value="listFeed" onclick="javascript:getFeedList()"/>
     <input type="button" value="updateFeed" onclick="javascript:updateFeed()"/>
     <input type="button" value="historialFeed" onclick="javascript:getHistoricalFeed()"/>
-    <input type="button" value="drawFeed" onclick="javascript:drawFeed(histFeed)"/>
+    <input type="button" value="drawFeed" onclick="javascript:drawFeed(histFeed,'2')"/>
 
 
               </p>
-<script type="text/javascript" src="http://tile.cloudmade.com/wml/0.2/web-maps-lite.js"></script><script type="text/javascript" src="http://apps.pachube.com/trails/trails.js"></script><script type="text/javascript">createPachubeTrails(1963,0,1,2,500,500);</script>
 <div id="map_canvas" ></div>
+<script type="text/javascript" src="http://tile.cloudmade.com/wml/0.2/web-maps-lite.js"></script><script type="text/javascript" src="http://apps.pachube.com/trails/trails.js"></script><script type="text/javascript">createPachubeTrails(1963,0,1,2,500,500);</script>
             </div>
           </div>
           <hr>
@@ -228,9 +228,9 @@ center: new google.maps.LatLng(-34.397, 150.644),
 
     }
     
-    function getRGB(min, max, value, reverse){
-        var red = (int) (255*value-255*min)(max-min);
-        var green = (int) (255*value-255*max)/(min-max);
+    function getRGB(min, max, value){
+        var red =  (255*value-255*min)/(max-min);
+        var green =  (255*value-255*max)/(min-max);
         function rgbToHex(r, g, b) {
             return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
         }
@@ -238,7 +238,7 @@ center: new google.maps.LatLng(-34.397, 150.644),
 
     } 
    
-    function drawFeed(feedH){
+    function drawFeed(feedH, datastreamId){
 
       var myLatLng = new google.maps.LatLng(0, -180);
       var mapOptions = {
@@ -248,13 +248,35 @@ center: new google.maps.LatLng(-34.397, 150.644),
       };
 
 
+      function getDatapointValue(feedH, atTime, datastrId){
+            var toRet;
+            var datastreams = feedH.datastreams;
+            //position of correct data stream
+            var dataSNum;
+            for( var dataS in datastreams){
+                if(datastreams[dataS].id == datastrId){
+                    dataSNum = dataS;
+                }
+            }
+            var datapoints = datastreams[dataSNum]['datapoints'];
+            for(var dataP in datapoints){
+                if(datapoints[dataP].at == atTime ){
+                    toRet = datapoints[dataP].value;
+                }
+            }
+            return toRet;
+      }
+
       var minTemp = 5;
       var maxTemp = 25;
 
       var minHum = 10;
       var maxHum = 50;  
-      var map = new google.maps.Map(document.getElementById("map_canvas"),
-          mapOptions);
+
+      var minUfo = -10;
+      var maxUfo = 0;  
+    
+      var map = new google.maps.Map(document.getElementById("map_canvas"), mapOptions);
             var routeCoors = [];
             //alert(feedH.location.waypoints[0].lat);
             var waypointToSort = feedH.location.waypoints;
@@ -272,12 +294,30 @@ center: new google.maps.LatLng(-34.397, 150.644),
             for(var ways in waypointToSort){
                 var lat = waypointToSort[ways].lat;
                 var lon = waypointToSort[ways].lon;
+                var at = waypointToSort[ways].at;
                 console.log(lat);
                 console.log(lon);
+                console.log()
                 console.log(ways);
                 if(typeof lon === 'undefined' || typeof lat === 'undefined'){
                 }else{
-                    routeCoors.push( new google.maps.LatLng(lat, lon)) ;
+                    //found lat and long
+                    var pos = new google.maps.LatLng(lat, lon);
+                    routeCoors.push(pos) ;
+                    var dpValue = getDatapointValue(feedH, at, datastreamId);
+                    var dpRGB = getRGB(minUfo, maxUfo, dpValue);
+                    var circleOptions = {
+                        strokeColor: dpRGB,
+                        strokeOpacity: 0.8,
+                        strokeWeight: 2,
+                        fillColor: dpRGB,
+                        fillOpacity: 0.35,
+                        map: map,
+                        center: pos,
+                        radius: 70000 
+                    };
+                    circleMeasure = new google.maps.Circle(circleOptions);
+                    
                 }            
             }
               var routePoly = new google.maps.Polyline({
