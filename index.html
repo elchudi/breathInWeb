@@ -146,12 +146,19 @@ center: new google.maps.LatLng(-34.397, 150.644),
                 Content
         <span id="datastream-value"></span>
         <span id="feed-list"></span>
+        <div class="btn-group" id="toggleButtonUsers" data-toggle="buttons-checkbox">
+        </div>
+        <br />
     <input type="button" value="newFeed" onclick="javascript:createNewFeed()"/>
     <input type="button" value="listFeed" onclick="javascript:getFeedListIds('chudichudi')"/>
     <input type="button" value="updateFeed" onclick="javascript:updateFeed()"/>
     <input type="button" value="historialFeed" onclick="javascript:getHistoricalFeed(1963)"/>
     <input type="button" value="drawFeed" onclick="javascript:drawFeed(histFeed,'2')"/>
     <input type="button" value="setFeedsForUser" onclick="javascript:setFeedsForUser('ufo sighted location')"/>
+    <input type="button" value="setAllUsers" onclick="javascript:setAllUsers()"/>
+    <input type="button" value="createToggleForUsers" onclick="javascript:createToggleButtonsForUsers()"/>
+    <input type="button" value="drawUserFeeds" onclick="javascript:drawUserFeeds('userId')"/>
+    <input type="button" value="drawUserssssFeeds" onclick="javascript:drawUsersFeeds()"/>
 
 
               </p>
@@ -231,22 +238,26 @@ center: new google.maps.LatLng(-34.397, 150.644),
 
     */
     var feedList;
-    var userId = "ufo sighted location";   
+    //var userId = "ufo sighted location";   
     var userFeeds = []; 
     function setFeedsForUser(userId){
         cosm.feed.list ({"user":cosmUser}, function (data) {
                     feedList = data.results;
                 for(var f in feedList){
                     
-                    console.log(feedList[f].location.name);
                     if(feedList[f].location.name == userId){
+                        console.log(feedList[f].location.name);
                         userFeeds.push(feedList[f]);
                     }
                 }
+                console.log("finishing setFeedsForUser");
+                return userFeeds;
             });
     }
+    
 
- 
+
+
 
     var histFeed;
     var feedId = 1963; 
@@ -257,9 +268,66 @@ center: new google.maps.LatLng(-34.397, 150.644),
 
     }
 
-    function drawFeeds(feeds, datastreamId){
+    var userIds = {};
+    function setAllUsers(){
+        cosm.feed.list ({"user":cosmUser}, function (data) {
+                    feedList = data.results;
+                for(var f in feedList){
+                    var userId = feedList[f].location.name;
+                    if(userId in userIds){
+                    }else{
+                        userIds[userId] = true;
+                    }
+                    console.log(userId);
+                }
+                console.log(userIds);
+            });
+    
+    }
+
+    function createToggleButtonsForUsers(){
+        setAllUsers();
+        setTimeout(function(){
+            var htmlB = "";
+            for(var u in userIds){
+               htmlB = htmlB + '<button type="button" class="btn" value="'+u+'" onclick="javascript:drawUsersFeeds()">'+u+'</button>'; 
+            }
+            $('#toggleButtonUsers').html(htmlB);
+            }, 2000)    
+    }
+    
+    function drawUsersFeeds(){
+        $('.btn.active').each(function(i){
+            alert(this.value);
+        });
+        var usersss = '';
+    } 
+    
+    function drawUserFeeds(userId){
+        cosm.feed.list ({"user":cosmUser}, function (data) {
+                var userFeeds = [];
+                feedList = data.results;
+                for(var f in feedList){
+                    
+                    if(feedList[f].location.name == userId){
+                        console.log(feedList[f].location.name);
+                        userFeeds.push(feedList[f]);
+                    }
+                }
+                console.log("finishing setFeedsForUser");
+                drawFeeds(userFeeds);    
+            });
+
+    } 
+
+    //function drawFeeds(feeds, datastreamId){
+    function drawFeeds(feeds){
+        console.log("after setuserFeeds?");
         for(var f in feeds){
-            drawFeed(feeds[f], datastreamId);
+            var datastreamIds = ['co','hum','temp','emag','db','hbeat'];
+            for(var d in datastreamIds){
+                drawFeed(feeds[f], d);
+            }
         }    
     }
     
