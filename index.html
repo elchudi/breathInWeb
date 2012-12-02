@@ -372,6 +372,27 @@ function initialize() {
 
     } 
    
+    function getValueFromDatastreams(datastreams, dataId){
+        var toRet;
+        for(var d in datastreams){
+            console.log("d " + d);
+            if(datastreams[d].id == dataId){
+                toRet = datastreams[d].current_value;
+            }
+        }
+        return toRet;
+    }
+ 
+    var lastWayG;
+    var lastLatG;
+    var lastLonG;
+    var lastWayA;
+    var lastLatA;
+    var lastLonA;
+    var strokColor;
+    var lastDataId;
+    var strokeColorG = '#'+Math.floor(Math.random()*16777215).toString(16);
+    var strokeColorA = '#'+Math.floor(Math.random()*16777215).toString(16);
     function drawFeed(feedH, datastreamId, map){
 
 
@@ -415,12 +436,12 @@ function initialize() {
             //alert(feedH.location.waypoints[0].lat);
             var waypointToSort = feedH.location.waypoints;
             for(var ways in waypointToSort){
-                console.log(waypointToSort[ways].lat);
-                console.log(waypointToSort[ways].lon);
+                console.log("lat " + waypointToSort[ways].lat);
+                console.log("lon " + waypointToSort[ways].lon);
             }
             
-            console.log('feed' + feedH.location.name );
-            console.log('dStream' + datastreamId );
+            console.log('feed ' + feedH.location.name );
+            console.log('dStream ' + datastreamId );
             waypointToSort = waypointToSort.sort(function(a, b) {
                  console.log(a['at']);
                  console.log(b['at']);
@@ -428,14 +449,28 @@ function initialize() {
                  return (a['at'] > b['at']);
                 
             });
-            var strokColor = '#'+Math.floor(Math.random()*16777215).toString(16);
             for(var ways in waypointToSort){
                 var lat = waypointToSort[ways].lat;
                 var lon = waypointToSort[ways].lon;
                 var at = waypointToSort[ways].at;
-                console.log(lat);
-                console.log(lon);
+                console.log('latSorted ' + lat);
+                console.log('lonSorted' + lon);
                 console.log("ways" + ways);
+                //loggin last positon for live feed
+                if(feedH.location.name=='652022076'){
+                    strokColor = strokeColorG;
+                    lastWayG = ways;
+                    lastLatG = waypointToSort[ways].lat;
+                    lastLonG =  waypointToSort[ways].lon;
+                
+                }
+                if(feedH.location.name=='626292957'){
+                    strokColor = strokeColorA;
+                    lastWayA = ways;
+                    lastLatA = waypointToSort[ways].lat;
+                    lastLonA =  waypointToSort[ways].lon;
+                
+                }
                 if(typeof lon === 'undefined' || typeof lat === 'undefined'){
                 }else{
                     if(lat === 0){
@@ -446,6 +481,7 @@ function initialize() {
                     var pos = new google.maps.LatLng(lat, lon);
                     routeCoors.push(pos) ;
                     var dpValue = getDatapointValue(feedH, at, datastreamId);
+                    lastDataId = datastreamId;
                     var dpRGB = getRGB(minMax[datastreamId][0].min, minMax[datastreamId][0].max, dpValue);
                     console.log("dpValue" + dpValue);
                     var circleOptions = {
@@ -462,7 +498,7 @@ function initialize() {
                     
                 }            
             }
-              var routeColor = '#'+Math.floor(Math.random()*16777215).toString(16);
+              var routeColor = strokColor;
               var routePoly = new google.maps.Polyline({
                 path: routeCoors,
                 strokeColor: routeColor,
@@ -471,6 +507,44 @@ function initialize() {
               });
 
               routePoly.setMap(map);
+        cosm.feed.subscribe (feedH.id, function(data){
+                var lat = feedH.location.lat;
+                var lon = feedH.location.lon;
+                var routeCoors = [];
+                var dpValue = getValueFromDatastreams(feedH.datastreams, lastDataId);
+                var strokColor;
+                if(feedH.location.name=='652022076'){
+                    //found lat and long
+                    strokColor = strokeColorG;
+                    routeCoors.push( new google.maps.LatLng(lastLatG,lastLonG)) ;
+                }
+                if(feedH.location.name=='626292957'){
+                    strokColor = strokeColorA;
+                    routeCoors.push( new google.maps.LatLng(lastLatA,lastLonA)) ;
+                }
+                    routeCoors.push( new google.maps.LatLng(lat, lon)) ;
+                    var dpRGB = getRGB(minMax[lastDataId][0].min, minMax[lastDataId][0].max, dpValue);
+                    console.log("dpValue" + dpValue);
+                    var circleOptions = {
+                        strokeColor: strokColor,
+                        strokeOpacity: 0.8,
+                        strokeWeight: 2,
+                        fillColor: dpRGB,
+                        fillOpacity: 0.35,
+                        map: map,
+                        center: pos,
+                        radius: 200 
+                    };
+                    circleMeasure = new google.maps.Circle(circleOptions);
+                  var routeColor = strokColor;
+                  var routePoly = new google.maps.Polyline({
+                    path: routeCoors,
+                    strokeColor: routeColor,
+                    strokeOpacity: 1.0,
+                    strokeWeight: 2
+                  });
+                  routePoly.setMap(map);
+        });
     }
 
 
