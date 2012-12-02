@@ -307,7 +307,7 @@ function initialize() {
         setTimeout(function(){
             var htmlB = "";
             for(var u in userIds){
-               htmlB = htmlB + '<button type="button" class="btn users btn-info" value="'+u+'" onclick="javascript:drawUsersFeeds()">'+u+'</button>'; 
+               htmlB = htmlB + '<button type="button" class="btn users btn-info" value="'+u+'" >'+u+'</button>'; 
             }
             $('#toggleButtonUsers').html(htmlB);
             }, 2000)    
@@ -324,9 +324,6 @@ function initialize() {
     var userFeeds = [];
     function drawUserFeeds(userId){
             userFeeds = [];
-            $('.btn.datastream.active').each(function(j){
-                alert(userId + this.value)
-            }); 
             cosm.feed.list ({"user":cosmUser}, function (data) {
                 feedList = data.results;
                 for(var f in feedList){
@@ -349,10 +346,17 @@ function initialize() {
     //function drawFeeds(feeds, datastreamId){
     function drawFeeds(feeds){
         console.log("after setuserFeeds?");
+      var myLatLng = new google.maps.LatLng(41.871526, 12.465912);
+      var mapOptions = {
+        zoom: 12,
+        center: myLatLng,
+        mapTypeId: google.maps.MapTypeId.TERRAIN
+      };
+        var map = new google.maps.Map(document.getElementById("map_canvas"), mapOptions);
         for(var f in feeds){
             //var datastreamIds = ['co','hum','temp','emag','db','hbeat'];
             $('.btn.datastream.active').each(function(j){
-                drawFeed(feeds[f], this.value);
+                drawFeed(feeds[f], this.value, map);
             }); 
 
         }    
@@ -368,14 +372,8 @@ function initialize() {
 
     } 
    
-    function drawFeed(feedH, datastreamId){
+    function drawFeed(feedH, datastreamId, map){
 
-      var myLatLng = new google.maps.LatLng(41.871526, 12.465912);
-      var mapOptions = {
-        zoom: 12,
-        center: myLatLng,
-        mapTypeId: google.maps.MapTypeId.TERRAIN
-      };
 
 
       function getDatapointValue(feedH, atTime, datastrId){
@@ -413,7 +411,6 @@ function initialize() {
         'emag':[{'min':0,'max':100}],
         'db':[{'min':0,'max':130}]
       }
-      var map = new google.maps.Map(document.getElementById("map_canvas"), mapOptions);
             var routeCoors = [];
             //alert(feedH.location.waypoints[0].lat);
             var waypointToSort = feedH.location.waypoints;
@@ -431,6 +428,7 @@ function initialize() {
                  return (a['at'] > b['at']);
                 
             });
+            var strokColor = '#'+Math.floor(Math.random()*16777215).toString(16);
             for(var ways in waypointToSort){
                 var lat = waypointToSort[ways].lat;
                 var lon = waypointToSort[ways].lon;
@@ -451,7 +449,7 @@ function initialize() {
                     var dpRGB = getRGB(minMax[datastreamId][0].min, minMax[datastreamId][0].max, dpValue);
                     console.log("dpValue" + dpValue);
                     var circleOptions = {
-                        strokeColor: dpRGB,
+                        strokeColor: strokColor,
                         strokeOpacity: 0.8,
                         strokeWeight: 2,
                         fillColor: dpRGB,
@@ -464,9 +462,10 @@ function initialize() {
                     
                 }            
             }
+              var routeColor = '#'+Math.floor(Math.random()*16777215).toString(16);
               var routePoly = new google.maps.Polyline({
                 path: routeCoors,
-                strokeColor: "#FF0000",
+                strokeColor: routeColor,
                 strokeOpacity: 1.0,
                 strokeWeight: 2
               });
